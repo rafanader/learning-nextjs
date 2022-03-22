@@ -21,34 +21,44 @@ function Title(props) {
 }
 
 export default function Index() {
-    const defaultUser = 'rafanader';
+    const defaultUserData = { 
+        "login": "rafanader",
+        "name": "Rafael Nader",
+        "followers_url": `https://api.github.com/users/rafanader/followers`
+    };
+
     const followersQnty = 3;
     const routerControl = useRouter();
 
-    const [usernameText, setUserLoginText] = React.useState(defaultUser);
-    const [userLogin, setUserLogin] = React.useState(defaultUser);
-    const [username, setUsername] = React.useState('');
+    const [userLoginText, setUserLoginText] = React.useState(defaultUserData.login);
+    const [userLogin, setUserLogin] = React.useState();
+    const [username, setUsername] = React.useState();
     const [submitDisabled, setSubmitDisabled] = React.useState(true);
     const [followers, setFollowers] = React.useState([]);
 
-    // LoadGithubUserData(defaultUser);
+    //ShowGitHubUserData(defaultUserData);
 
-    async function LoadGithubUserData(_userLogin) {
+    async function LoadGithubUserData(_userLoginText) {
         ToggleFormStatus(false);
 
-        if (_userLogin.length > 2) 
+        if (_userLoginText.length > 2) 
         {
-            let userGHData = await FetchAPI(`https://api.github.com/users/${_userLogin}`);
+            let userGHData = await FetchAPI(`https://api.github.com/users/${_userLoginText}`);
 
             if (userGHData != undefined && userGHData !== '') //User exists
             {
-                setUsername(userGHData.name);
-                setUserLogin(userGHData.login);
-                ToggleFormStatus(true);
-
-                LoadAndShowGitHubUserFollowers(userGHData);
+                ShowGitHubUserData(userGHData);
             }
         }
+    }
+
+    async function ShowGitHubUserData(userGHData)
+    {
+        setUsername(userGHData.name);
+        setUserLogin(userGHData.login);
+        ToggleFormStatus(true);
+
+        LoadAndShowGitHubUserFollowers(userGHData);
     }
 
     async function LoadAndShowGitHubUserFollowers(_userGHData) {
@@ -69,16 +79,7 @@ export default function Index() {
     function ShowGitHubUserFollowers(_followersList) {
         
         let quantity = (_followersList.length < followersQnty) ? _followersList.length : followersQnty;
-        const tempArr = [];
-
-        for(let i=0; i<quantity; i++) {
-            tempArr.push( { 
-                key: _followersList[i].login,
-                login: _followersList[i].login
-            });
-        }
-
-        setFollowers(tempArr);
+        setFollowers(_followersList.slice(0, quantity));
     }
 
     function ToggleFormStatus(enable) {
@@ -87,7 +88,7 @@ export default function Index() {
     
     async function FetchAPI(_urlAPI) 
     {
-        console.log('Caliing API ', _urlAPI);
+        console.log('Calling API ', _urlAPI);
 
         const response = await fetch(_urlAPI);
         if (response.status === 200) {
@@ -142,11 +143,12 @@ export default function Index() {
                         </Text>
 
                         <TextField
-                            value={usernameText}
+                            value={userLoginText}
                             onChange={function onChangeHandler(event) {
 
-                                let userLoginText = event.target.value;
-                                setUserLoginText(userLoginText);
+                                let login = event.target.value;
+                                setUserLoginText(login);
+
                                 LoadGithubUserData(userLoginText);
                             }}
                             styleSheet={{ 'text-align': 'center' }}
@@ -239,7 +241,7 @@ export default function Index() {
                             }}
                         >
                             {
-                                followers.map(user => {
+                                followers.map( ( user, index) => {
                                     return (
                                         <Box
                                             styleSheet={{
@@ -249,6 +251,7 @@ export default function Index() {
                                                 maxWidth: '80px',
                                                 flex: 1
                                             }}
+                                            key={index}
                                         >
                                             <Image
                                                 styleSheet={{
