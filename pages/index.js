@@ -20,6 +20,40 @@ function Title(props) {
     );
 }
 
+function FollowerRibbon(props) {
+    return (
+        <Box
+            styleSheet={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                maxWidth: '80px',
+                flex: 1
+            }}
+            //key={props.mapkey}
+        >
+            <Image
+                styleSheet={{
+                    width: '80%',
+                    borderRadius: '50%',
+                    border: '1px solid',
+                    'border-color': themeConfig.theme.colors.neutrals[800]
+                }}
+                src={`https://github.com/${props.userlogin}.png`}
+            />
+            <Text
+                variant="body4"
+                styleSheet={{
+                    color: themeConfig.theme.colors.neutrals[300],
+                    padding: '3px 10px',
+                }}
+            >
+                {props.userlogin}
+            </Text>
+        </Box>                                   
+    )
+}
+
 export default function Index() {
     const defaultUserData = { 
         "login": "rafanader",
@@ -62,8 +96,8 @@ export default function Index() {
     }
 
     async function LoadAndShowGitHubUserFollowers(_userGHData) {
-        let userGHFollowersData = await LoadGitHubUserFollowers(_userGHData.followers_url);
 
+        let userGHFollowersData = await FetchAPI(_userGHData.followers_url);
         if (userGHFollowersData != undefined) //User Followers exists
         {
             ShowGitHubUserFollowers(userGHFollowersData);
@@ -72,12 +106,7 @@ export default function Index() {
             setFollowers([]);
     }
 
-    async function LoadGitHubUserFollowers(_followersUrl) {
-        return await FetchAPI(_followersUrl);
-    }
-
-    function ShowGitHubUserFollowers(_followersList) {
-        
+    async function ShowGitHubUserFollowers(_followersList) {   
         let quantity = (_followersList.length < followersQnty) ? _followersList.length : followersQnty;
         setFollowers(_followersList.slice(0, quantity));
     }
@@ -92,8 +121,9 @@ export default function Index() {
 
         const response = await fetch(_urlAPI);
         if (response.status === 200) {
-            console.log('Data returned: ', response.json);
-            return response.json();
+            let resp = response.json();
+            console.log('Data returned: ', resp);
+            return resp;
         } 
 
         return response.statusText;
@@ -148,8 +178,7 @@ export default function Index() {
 
                                 let login = event.target.value;
                                 setUserLoginText(login);
-
-                                LoadGithubUserData(userLoginText);
+                                LoadGithubUserData(login);
                             }}
                             styleSheet={{ 'text-align': 'center' }}
                             fullWidth
@@ -241,38 +270,8 @@ export default function Index() {
                             }}
                         >
                             {
-                                followers.map( ( user, index) => {
-                                    return (
-                                        <Box
-                                            styleSheet={{
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                alignItems: 'center',
-                                                maxWidth: '80px',
-                                                flex: 1
-                                            }}
-                                            key={index}
-                                        >
-                                            <Image
-                                                styleSheet={{
-                                                    width: '80%',
-                                                    borderRadius: '50%',
-                                                    border: '1px solid',
-                                                    'border-color': themeConfig.theme.colors.neutrals[800]
-                                                }}
-                                                src={`https://github.com/${user.login}.png`}
-                                            />
-                                            <Text
-                                                variant="body4"
-                                                styleSheet={{
-                                                    color: themeConfig.theme.colors.neutrals[300],
-                                                    padding: '3px 10px',
-                                                }}
-                                            >
-                                                {user.login}
-                                            </Text>
-                                        </Box>                                   
-                                    )
+                                followers.map( ( user, index) => {      
+                                    return (<FollowerRibbon userlogin={`${user.login}`} key={index} />)
                                 })
                             }
                         </Box>
