@@ -30,7 +30,6 @@ function FollowerRibbon(props) {
                 maxWidth: '80px',
                 flex: 1
             }}
-            //key={props.mapkey}
         >
             <Image
                 styleSheet={{
@@ -64,9 +63,9 @@ export default function Index() {
     const followersQnty = 3;
     const routerControl = useRouter();
 
-    const [userLoginText, setUserLoginText] = React.useState(defaultUserData.login);
-    const [userLogin, setUserLogin] = React.useState();
-    const [username, setUsername] = React.useState();
+    const [userLoginText, setUserLoginText] = React.useState('');
+    const [userLogin, setUserLogin] = React.useState('');
+    const [userName, setUserName] = React.useState('');
     const [submitDisabled, setSubmitDisabled] = React.useState(true);
     const [followers, setFollowers] = React.useState([]);
 
@@ -88,7 +87,7 @@ export default function Index() {
 
     async function ShowGitHubUserData(userGHData)
     {
-        setUsername(userGHData.name);
+        setUserName(userGHData.name);
         setUserLogin(userGHData.login);
         ToggleFormStatus(true);
 
@@ -149,7 +148,7 @@ export default function Index() {
                             sm: 'row',
                         },
                         width: '100%', maxWidth: '700px',
-                        borderRadius: '5px', padding: '16px', margin: '16px',
+                        borderRadius: '2px', padding: '16px', margin: '16px',
                         boxShadow: '0 2px 10px 0 rgb(0 0 0 / 20%)',
                         backgroundColor: themeConfig.theme.colors.neutrals[700],
                     }}
@@ -234,18 +233,18 @@ export default function Index() {
                                     color: themeConfig.theme.colors.neutrals[200],
                                     backgroundColor: themeConfig.theme.colors.neutrals[900],
                                     padding: '3px 10px',
-                                    'margin-bottom': '5px',
+                                    marginBottom: '5px',
                                     borderRadius: '1000px'
                                 }}
                             >
-                                {username}
+                                {userName}
                             </Text>
                             <Image
                                 styleSheet={{
                                     maxWidth: '50%',
                                     borderRadius: '50%',
                                     border: '2px solid',
-                                    'border-color': themeConfig.theme.colors.neutrals[200]
+                                    borderColor: themeConfig.theme.colors.neutrals[200]
                                 }}
                                 src={`https://github.com/${userLogin}.png`}
                             />
@@ -281,4 +280,5 @@ export default function Index() {
             </Box>
         </>
     );
+    
 }

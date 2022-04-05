@@ -1,3 +1,5 @@
+import themeConfig from '../theme.json'
+
 function GlobalStyle() {
   return (<style global jsx>{`
         * {
