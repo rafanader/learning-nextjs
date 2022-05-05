@@ -68,6 +68,7 @@ export default function Index() {
     const [debounce, setDebounce] = React.useState(false);
 
     function LoadDefaultUserData() {
+        setUserLoginText(defaultUser);
         LoadAndShowGithubUserData(defaultUser);
     }
 
@@ -83,8 +84,6 @@ export default function Index() {
             {
                 //User exists
                 setUserGHData(userGHData);
-                //setUserName(userGHData.name);
-                //setUserLogin(userGHData.login);
                 ToggleFormStatus(true);
 
                 const followersList = await FetchAPI(userGHData.followers_url)
@@ -186,8 +185,7 @@ export default function Index() {
                     <TextField
                         value={userLoginText}
                         onChange={(event) => {
-                            const userlogin = event.target.value
-                            handleChange(userlogin)
+                            handleChange(event.target.value)
                         }}
                         styleSheet={{
                             textAlign: 'center',
