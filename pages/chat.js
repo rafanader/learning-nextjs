@@ -102,8 +102,9 @@ export default function ChatPage() {
                     }}
                 >
                     {
-                        Array.from(messagesList).map((message) => {
-                             return <MessageComponent key={message.id} message={message} />
+                        Array.from(messagesList).map((message, index) => {
+                            message.id = index;
+                            return <MessageComponent key={index} message={message} />
                         })
                     }                   
 
@@ -154,7 +155,7 @@ export default function ChatPage() {
         const message = props.message
         let messageBGColor = themeConfig.theme.colors.neutrals[500]
 
-        if (message.index % 2)
+        if (message.id % 2)
             messageBGColor = themeConfig.theme.colors.neutrals[700]
 
         return (
