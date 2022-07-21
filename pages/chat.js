@@ -1,162 +1,118 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
-import themeConfig from '../theme.json';
+
+import * as configs from '../configurations/general';
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseConfigs = configs.appkeys.SUPABASE;
+
+// Create a single supabase client for interacting with your database
+const supabaseClient = createClient(supabaseConfigs.URL, supabaseConfigs.API_ANON_KEY);
+
 
 export default function ChatPage() {
-    const [messagesList, setMessagesList] = React.useState([
-        {
-            username: 'omariosouto',
-            datetime: '01/04/2022 08:21:21',
-            text: 'message text 3',
-            id: 2
-        },
-        {
-            username: 'peas',
-            datetime: '01/04/2022 08:20:20',
-            text: 'message text 2',
-            id: 1
-        },
-        {
-            username: 'rafanader',
-            datetime: '01/04/2022 08:19:19',
-            text: 'message text',
-            id: 0
-        },
-    ]);
-
+       
+    const [messagesList, setMessagesList] = React.useState([]);
     const [messageText, setMessageText] = React.useState("");
+    const [timeoutId, setTimeoutId] = React.useState(0);
 
-    function MessageTextKeyPressHandler(event) 
-    {
+    React.useEffect(() => {
+        RefreshMessagesList()
+    }, []);
+
+    function RefreshMessagesList() {
+        console.log('Refreshing messages...')
+        const timerId = setTimeout(() => {
+            RefreshMessagesList();
+        }, 10000);
+
+        LoadMessages();
+        setTimeoutId(timerId);
+    }
+
+    async function LoadMessages() {
+        const response = await supabaseClient
+            .from('tblMessages')
+            .select('*')
+            .order('datetime', { ascending: false} );
+
+        setMessagesList(response.data);
+    }
+
+    function MessageTextKeyPressHandler(event) {
         setMessageText(event.target.value);
         //Shift + Enter to send the message
         if (
             event.shiftKey &&
             event.key.toUpperCase() == 'ENTER'
-        ) 
-        {
+        ) {
             NewMessage(messageText);
-            
-            event.preventDefault();            
+
+            event.preventDefault();
         }
     }
 
-    function NewMessage(_messageText) 
-    {
+    function NewMessage(_messageText) {
         const currentUser = 'rafanader'
 
         const newMessage = {
             username: currentUser,
-            datetime: new Date().toLocaleString('pt-br'),//.substring(0, 16),
-            text: _messageText,
-            id: messagesList.length
+            datetime: new Date(),
+            text: _messageText
         };
-        
-        setMessagesList([newMessage, ...messagesList]);
-        setMessageText("");        
+
+        setMessageText("");
+        InsertMessage(newMessage);
     }
-        
-    function DeleteMessage(messageId) 
-    {
+
+    async function InsertMessage(message) {
+        if(timeoutId > 0)
+            clearTimeout(timeoutId);
+
+        //Insert message in Supabase
+        const response = await supabaseClient.from("tblMessages")
+            .insert(message);
+
+        console.log(response);
+                
+        RefreshMessagesList();
+    }
+
+    function DeleteMessage(messageId) {
         const newList = messagesList.filter((item) => item.id != messageId);
         setMessagesList(newList);
     }
 
-    return (
-        <Box
-            styleSheet={{
-                display: 'flex',
-                flexDirection: 'column',
-                flex: 1,
-                boxShadow: '0 2px 10px 0 rgb(0 0 0 / 20%)',
-                borderRadius: '2px',
-                backgroundColor: themeConfig.theme.colors.neutrals[700],
-                height: '100%',
-                maxWidth: '95%',
-                maxHeight: '95vh',
-                padding: '16px',
-            }}
-        >
-            <Header />
-            <Box
-                styleSheet={{
-                    position: 'relative',
-                    display: 'flex',
-                    flex: 1,
-                    height: '80%',
-                    backgroundColor: themeConfig.theme.colors.neutrals[900],
-                    flexDirection: 'column',
-                    borderRadius: '2px',
-                    padding: '16px',
-                }}
-            >
-                <Box
-                    tag="ul"
-                    styleSheet={{
-                        overflow: 'hidden',
-                        display: 'flex',
-                        flex: 1,
-                        flexDirection: 'column-reverse',
-                        color: themeConfig.theme.colors.neutrals['000'],
-                        marginBottom: '16px',
-                    }}
-                >
-                    {
-                        Array.from(messagesList).map((message, index) => {
-                            message.id = index;
-                            return <MessageComponent key={index} message={message} />
-                        })
-                    }                   
+    function FormatDateTime(utcDateTime) {
+        const timeZoneDifference = -3;
 
-                </Box>
-                <Box
-                    as="form"
-                    styleSheet={{
-                        display: 'flex',
-                        alignItems: 'center',
-                    }}
-                >
-                    <TextField
-                        value={messageText}
-                        onChange={(event) => {
-                            setMessageText(event.target.value);
-                        }}
-                        onKeyPress={(event) => MessageTextKeyPressHandler(event)}
-                        placeholder="type your message and press SHIFT+ENTER to send"
-                        type="textarea"
-                        styleSheet={{
-                            width: '100%',
-                            border: '0',
-                            resize: 'none',
-                            borderRadius: '5px',
-                            padding: '6px 8px',
-                            backgroundColor: themeConfig.theme.colors.neutrals[800],
-                            //marginRight: '12px',
-                            color: themeConfig.theme.colors.neutrals[200],
-                        }}
-                    />
-                    <Button
-                        colorVariant="positive"
-                        iconName="arrowRight"
-                        label=" "
-                        size="xl"
-                        type='button'
-                        styleSheet={{
-                            marginBottom: '8px'
-                        }}
-                        onClick={() => NewMessage(messageText)}
-                    />
-                </Box>
-            </Box>
-        </Box>
-    )
+        const year = utcDateTime.substr(0, 4);
+        const month = FormatNumberLessTen(utcDateTime.substr(5, 2));
+        const day = FormatNumberLessTen(utcDateTime.substr(8, 2));
+        const hour = FormatNumberLessTen(parseInt(utcDateTime.substr(11, 2)) + timeZoneDifference);
+        const minute = FormatNumberLessTen(utcDateTime.substr(14, 2));
+        const second = FormatNumberLessTen(utcDateTime.substr(17, 2));
+        
+        const formatedDt = day + "/" + month + "/" + year + " " + hour + ":" + minute + ":" + second;
+
+        return formatedDt;
+    }
+
+    function FormatNumberLessTen(number) {
+        if(parseInt(number) < 10)
+            number = '0' + parseInt(number);
+        
+        return number;
+    }
     
     function MessageComponent(props) {
         const message = props.message
-        let messageBGColor = themeConfig.theme.colors.neutrals[500]
+        let messageBGColor = configs.theme.colors.neutrals[500]
 
         if (message.id % 2)
-            messageBGColor = themeConfig.theme.colors.neutrals[700]
+            messageBGColor = configs.theme.colors.neutrals[700]
+
+        const formatedDt = FormatDateTime(message.datetime);        
 
         return (
             <Text
@@ -191,7 +147,7 @@ export default function ChatPage() {
                             fontSize: '14px',
                             paddingTop: '6px',
                             paddingBottom: '6px',
-                            color: themeConfig.theme.colors.primary[400],
+                            color: configs.theme.colors.primary[400],
                             width: '100%',
                         }}
                     >
@@ -200,7 +156,7 @@ export default function ChatPage() {
                     <Text
                         styleSheet={{
                             fontSize: '11px',
-                            color: themeConfig.theme.colors.neutrals[300],
+                            color: configs.theme.colors.neutrals[300],
                             textAlign: 'right',
                             width: '130px',
                             marginTop: '5px',
@@ -208,12 +164,12 @@ export default function ChatPage() {
                         }}
                         tag="span"
                     >
-                        {message.datetime}
+                        { formatedDt }
                     </Text>
                     <Text
                         styleSheet={{
                             fontSize: '11px',
-                            color: themeConfig.theme.colors.primary[500],
+                            color: configs.theme.colors.primary[500],
                             textAlign: 'right',
                             width: '30px',
                             marginTop: '5px',
@@ -239,7 +195,7 @@ export default function ChatPage() {
                         styleSheet={{
                             fontSize: '14px',
                             padding: '8px',
-                            color: themeConfig.theme.colors.neutrals[200],
+                            color: configs.theme.colors.neutrals[200],
                         }}
                         tag="span"
                     >
@@ -249,6 +205,95 @@ export default function ChatPage() {
             </Text>
         )
     }
+
+    return (
+        <Box
+            styleSheet={{
+                display: 'flex',
+                flexDirection: 'column',
+                flex: 1,
+                boxShadow: '0 2px 10px 0 rgb(0 0 0 / 20%)',
+                borderRadius: '2px',
+                backgroundColor: configs.theme.colors.neutrals[700],
+                height: '100%',
+                maxWidth: '95%',
+                maxHeight: '95vh',
+                padding: '16px',
+            }}
+        >
+            <Header />
+            <Box
+                styleSheet={{
+                    position: 'relative',
+                    display: 'flex',
+                    flex: 1,
+                    height: '80%',
+                    backgroundColor: configs.theme.colors.neutrals[900],
+                    flexDirection: 'column',
+                    borderRadius: '2px',
+                    padding: '16px',
+                }}
+            >
+                <Box
+                    tag="ul"
+                    styleSheet={{
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flex: 1,
+                        flexDirection: 'column-reverse',
+                        color: configs.theme.colors.neutrals['000'],
+                        marginBottom: '16px',
+                    }}
+                >
+                    {
+                        Array.from(messagesList).map((message, index) => {
+                            message.id = index;
+                            return <MessageComponent key={index} message={message} />
+                        })
+                    }
+
+                </Box>
+                <Box
+                    as="form"
+                    styleSheet={{
+                        display: 'flex',
+                        alignItems: 'center',
+                    }}
+                >
+                    <TextField
+                        value={messageText}
+                        onChange={(event) => {
+                            setMessageText(event.target.value);
+                        }}
+                        onKeyPress={(event) => MessageTextKeyPressHandler(event)}
+                        placeholder="type your message and press SHIFT+ENTER to send"
+                        type="textarea"
+                        styleSheet={{
+                            width: '100%',
+                            border: '0',
+                            resize: 'none',
+                            borderRadius: '5px',
+                            padding: '6px 8px',
+                            backgroundColor: configs.theme.colors.neutrals[800],
+                            //marginRight: '12px',
+                            color: configs.theme.colors.neutrals[200],
+                        }}
+                    />
+                    <Button
+                        colorVariant="positive"
+                        iconName="arrowRight"
+                        label=" "
+                        size="xl"
+                        type='button'
+                        styleSheet={{
+                            marginBottom: '8px'
+                        }}
+                        onClick={() => NewMessage(messageText)}
+                    />
+                </Box>
+            </Box>
+        </Box>
+    )
 }
 
 function Header() {

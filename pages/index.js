@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { Box, Button, Text, TextField, Image } from '@skynexui/components'
 import { useRouter } from 'next/router'
 
-import themeConfig from '../theme.json'
+import * as configs from '../configurations/general'
 
 function Title(props) {
     const Tag = props.tag || 'h1'
@@ -12,7 +12,7 @@ function Title(props) {
             <style jsx>
                 {`
                     ${Tag} {
-                        color: ${themeConfig.theme.colors.neutrals['000']};
+                        color: ${configs.theme.colors.neutrals['000']};
                         font-weight: 600;
                     }
                 `}
@@ -38,14 +38,14 @@ function FollowerRibbon(props) {
                     width: '80%',
                     borderRadius: '50%',
                     border: '1px solid',
-                    'border-color': themeConfig.theme.colors.neutrals[800],
+                    'border-color': configs.theme.colors.neutrals[800],
                 }}
                 src={`https://github.com/${props.userlogin}.png`}
             />
             <Text
                 variant="body4"
                 styleSheet={{
-                    color: themeConfig.theme.colors.neutrals[300],
+                    color: configs.theme.colors.neutrals[300],
                     padding: '3px 10px',
                 }}
             >
@@ -58,6 +58,7 @@ function FollowerRibbon(props) {
 const defaultUser = 'omariosouto'
 
 export default function Index() {
+
     const constFollowersQnty = 3;
     const routerControl = useRouter();
 
@@ -151,7 +152,7 @@ export default function Index() {
                     padding: '16px',
                     margin: '16px',
                     boxShadow: '0 2px 10px 0 rgb(0 0 0 / 20%)',
-                    backgroundColor: themeConfig.theme.colors.neutrals[700],
+                    backgroundColor: configs.theme.colors.neutrals[700],
                 }}
             >
                 {/* Formulário */}
@@ -176,10 +177,10 @@ export default function Index() {
                         variant="body3"
                         styleSheet={{
                             marginBottom: '32px',
-                            color: themeConfig.theme.colors.neutrals[300],
+                            color: configs.theme.colors.neutrals[300],
                         }}
                     >
-                        {themeConfig.name}
+                        {configs.name}
                     </Text>
 
                     <TextField
@@ -194,13 +195,13 @@ export default function Index() {
                         textFieldColors={{
                             neutral: {
                                 textColor:
-                                    themeConfig.theme.colors.neutrals[200],
+                                    configs.theme.colors.neutrals[200],
                                 mainColor:
-                                    themeConfig.theme.colors.neutrals[900],
+                                    configs.theme.colors.neutrals[900],
                                 mainColorHighlight:
-                                    themeConfig.theme.colors.primary[500],
+                                    configs.theme.colors.primary[500],
                                 backgroundColor:
-                                    themeConfig.theme.colors.neutrals[800],
+                                    configs.theme.colors.neutrals[800],
                             },
                         }}
                     />
@@ -211,12 +212,13 @@ export default function Index() {
                         fullWidth
                         buttonColors={{
                             contrastColor:
-                                themeConfig.theme.colors.neutrals['000'],
-                            mainColor: themeConfig.theme.colors.primary[500],
+                                configs.theme.colors.neutrals['000'],
+                            mainColor: 
+                                configs.theme.colors.primary[500],
                             mainColorLight:
-                                themeConfig.theme.colors.primary[400],
+                                configs.theme.colors.primary[400],
                             mainColorStrong:
-                                themeConfig.theme.colors.primary[600],
+                                configs.theme.colors.primary[600],
                         }}
                         disabled={submitDisabled}
                     />
@@ -246,9 +248,9 @@ export default function Index() {
                         <Text
                             variant="body4"
                             styleSheet={{
-                                color: themeConfig.theme.colors.neutrals[200],
+                                color: configs.theme.colors.neutrals[200],
                                 backgroundColor:
-                                    themeConfig.theme.colors.neutrals[900],
+                                    configs.theme.colors.neutrals[900],
                                 padding: '3px 10px',
                                 marginBottom: '5px',
                                 borderRadius: '1000px',
@@ -263,7 +265,7 @@ export default function Index() {
                                 borderRadius: '50%',
                                 border: '2px solid',
                                 borderColor:
-                                    themeConfig.theme.colors.neutrals[200],
+                                    configs.theme.colors.neutrals[200],
                             }}
                             src={`https://github.com/${userGHData.login}.png`}
                         />
@@ -271,7 +273,7 @@ export default function Index() {
                     <Text
                         variant="body4"
                         styleSheet={{
-                            color: themeConfig.theme.colors.neutrals[200],
+                            color: configs.theme.colors.neutrals[200],
                             padding: '20px 0px 10px 3px',
                             width: '100%',
                         }}

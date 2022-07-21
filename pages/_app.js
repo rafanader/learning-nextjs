@@ -1,6 +1,6 @@
 import { Box, Text, TextField, Image, Button } from '@skynexui/components'
 
-import themeConfig from '../theme.json'
+import * as config from '../configurations/general'
 
 function GlobalStyle() {
     return (
@@ -44,12 +44,12 @@ export default function CustomApp({ Component, pageProps }) {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    backgroundColor: themeConfig.theme.colors.primary[500],
+                    backgroundColor: config.theme.colors.primary[500],
                     backgroundImage: `url(https://virtualbackgrounds.site/wp-content/uploads/2020/08/the-matrix-digital-rain.jpg)`,
                     backgroundRepeat: 'no-repeat',
                     backgroundSize: 'cover',
                     backgroundBlendMode: 'multiply',
-                    color: themeConfig.theme.colors.neutrals['000'],
+                    color: config.theme.colors.neutrals['000'],
                 }}
             >
                 <Component {...pageProps} />
