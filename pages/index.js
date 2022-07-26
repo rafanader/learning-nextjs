@@ -158,10 +158,8 @@ export default function Index() {
                 {/* Formulário */}
                 <Box
                     as="form"
-                    onSubmit={function OnSubmitHandler(event) {
-                        event.preventDefault()
-                        routerControl.push('/chat')
-                    }}
+                    action={`/chat?username=${userLoginText}`}
+                    method="post"
                     styleSheet={{
                         display: 'flex',
                         flexDirection: 'column',
@@ -172,7 +170,7 @@ export default function Index() {
                         marginBottom: '32px',
                     }}
                 >
-                    <Title tag="h2">Seja bem vindo(a)!</Title>
+                    <Title tag="h2">Seja bem vindos(as)!</Title>
                     <Text
                         variant="body3"
                         styleSheet={{

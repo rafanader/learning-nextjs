@@ -1,8 +1,10 @@
-import { Box, Text, TextField, Image, Button } from '@skynexui/components';
 import React from 'react';
+import { useRouter } from 'next/router'
+import { Box, Text, TextField, Image, Button } from '@skynexui/components';
+import { createClient } from '@supabase/supabase-js'
 
 import * as configs from '../configurations/general';
-import { createClient } from '@supabase/supabase-js'
+import { GitHubCard } from '../components/gitHubCard.js'
 
 const supabaseConfigs = configs.appkeys.SUPABASE;
 
@@ -15,6 +17,7 @@ export default function ChatPage() {
     const [messagesList, setMessagesList] = React.useState([]);
     const [messageText, setMessageText] = React.useState("");
     const [timeoutId, setTimeoutId] = React.useState(0);
+    const routerControl = useRouter();
 
     React.useEffect(() => {
         RefreshMessagesList()
@@ -23,10 +26,9 @@ export default function ChatPage() {
     function RefreshMessagesList() {
         console.log('Refreshing messages...')
         const timerId = setTimeout(() => {
-            RefreshMessagesList();
-        }, 10000);
+            LoadMessages();
+        }, 1000);
 
-        LoadMessages();
         setTimeoutId(timerId);
     }
 
@@ -53,7 +55,7 @@ export default function ChatPage() {
     }
 
     function NewMessage(_messageText) {
-        const currentUser = 'rafanader'
+        const currentUser = routerControl.query.username;
 
         const newMessage = {
             username: currentUser,
@@ -72,15 +74,17 @@ export default function ChatPage() {
         //Insert message in Supabase
         const response = await supabaseClient.from("tblMessages")
             .insert(message);
-
-        console.log(response);
-                
-        RefreshMessagesList();
+        
+        LoadMessages();
     }
 
-    function DeleteMessage(messageId) {
-        const newList = messagesList.filter((item) => item.id != messageId);
-        setMessagesList(newList);
+    async function DeleteMessage(messageId) {
+        const response = await supabaseClient.from("tblMessages")
+            .delete()
+            .match({id : messageId});
+        
+        console.log('delete response for id ' + messageId + ': ', response);
+        LoadMessages();
     }
 
     function FormatDateTime(utcDateTime) {
@@ -89,11 +93,16 @@ export default function ChatPage() {
         const year = utcDateTime.substr(0, 4);
         const month = FormatNumberLessTen(utcDateTime.substr(5, 2));
         const day = FormatNumberLessTen(utcDateTime.substr(8, 2));
-        const hour = FormatNumberLessTen(parseInt(utcDateTime.substr(11, 2)) + timeZoneDifference);
+
+        let hour = parseInt(utcDateTime.substr(11, 2)) + timeZoneDifference;
+        if(hour < 0)
+            hour = 24 + hour;
+        
         const minute = FormatNumberLessTen(utcDateTime.substr(14, 2));
         const second = FormatNumberLessTen(utcDateTime.substr(17, 2));
         
-        const formatedDt = day + "/" + month + "/" + year + " " + hour + ":" + minute + ":" + second;
+        const formatedDt = FormatNumberLessTen(hour) + ":" + minute + ":" + second;
+        //const formatedDt = day + "/" + month + "/" + year + " " + hour + ":" + minute + ":" + second;
 
         return formatedDt;
     }
@@ -130,18 +139,8 @@ export default function ChatPage() {
                         flexDirection: 'row',
                     }}
                 >
-                    <Image
-                        alt={`${message.username} profile image`}
-                        styleSheet={{
-                            width: '30px',
-                            height: '30px',
-                            borderRadius: '50%',
-                            display: 'inline-block',
-                            marginRight: '8px',
-                        }}
-                        src={`https://github.com/${message.username}.png`}
-                    />
-                    <Text
+                    <GitHubCard username={message.username} />
+                     <Text
                         tag="strong"
                         styleSheet={{
                             fontSize: '14px',
@@ -174,7 +173,12 @@ export default function ChatPage() {
                             width: '30px',
                             marginTop: '5px',
                             marginRight: '5px',
-                            cursor: 'pointer'
+                            hover: {
+                                cursor: 'pointer',
+                                fontWeight: '600',
+                                fontSize: '12px',
+                                color: configs.theme.colors.primary[300]
+                            }
                         }}
                         tag="a"
                         onClick={() => {
@@ -237,7 +241,8 @@ export default function ChatPage() {
                 <Box
                     tag="ul"
                     styleSheet={{
-                        overflow: 'hidden',
+                        overflowY: 'auto',
+                        overflowX: 'hidden',
                         display: 'flex',
                         flex: 1,
                         flexDirection: 'column-reverse',
@@ -247,7 +252,6 @@ export default function ChatPage() {
                 >
                     {
                         Array.from(messagesList).map((message, index) => {
-                            message.id = index;
                             return <MessageComponent key={index} message={message} />
                         })
                     }
