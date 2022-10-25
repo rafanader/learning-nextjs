@@ -1,3 +1,6 @@
+///TODO: implement getStaticProps method in index to load default user data
+///TODO: create github profile photo component and change to it in all pages
+
 import React, { useEffect } from 'react'
 import { Box, Button, Text, TextField, Image } from '@skynexui/components'
 import { useRouter } from 'next/router'
@@ -28,7 +31,7 @@ function FollowerRibbon(props) {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                maxWidth: '80px',
+                maxWidth: '90px',
                 flex: 1,
             }}
         >
@@ -104,12 +107,12 @@ export default function Index() {
     }
 
     async function FetchAPI(_urlAPI) {
-        console.log('Calling API ', _urlAPI);
+        // console.log('Calling API ', _urlAPI);
 
         const response = await fetch(_urlAPI);
         if (response.status === 200) {
             const resp = response.json();
-            console.log('Data returned: ', resp);
+            // console.log('Data returned: ', resp);
             return resp;
         }
 
@@ -157,9 +160,7 @@ export default function Index() {
             >
                 {/* Formulário */}
                 <Box
-                    as="form"
-                    action={`/chat?username=${userLoginText}`}
-                    method="post"
+                    as="form"                   
                     styleSheet={{
                         display: 'flex',
                         flexDirection: 'column',
@@ -169,6 +170,16 @@ export default function Index() {
                         textAlign: 'center',
                         marginBottom: '32px',
                     }}
+                    onSubmit={function (eventData) {
+                        eventData.preventDefault();
+
+                        //roteamento.push(`/chat?username=${username}`);
+                        routerControl.push( {
+                            pathname: '/chat',
+                            query: { username: userLoginText}
+                        }, '/chat');
+
+                      }}
                 >
                     <Title tag="h2">Seja bem vindos(as)!</Title>
                     <Text
@@ -182,6 +193,7 @@ export default function Index() {
                     </Text>
 
                     <TextField
+                        name='username'
                         value={userLoginText}
                         onChange={(event) => {
                             handleChange(event.target.value)
@@ -256,17 +268,22 @@ export default function Index() {
                         >
                             {userGHData.name}
                         </Text>
-                        <Image
-                            alt={`${userGHData.name} profile image`}
-                            styleSheet={{
-                                maxWidth: '50%',
-                                borderRadius: '50%',
-                                border: '2px solid',
-                                borderColor:
-                                    configs.theme.colors.neutrals[200],
-                            }}
-                            src={`https://github.com/${userGHData.login}.png`}
-                        />
+                        {
+                            userGHData.login != undefined ?
+                            (
+                                <Image
+                                    alt={`${userGHData.name}'s Github profile image`}
+                                    styleSheet={{
+                                        maxWidth: '50%',
+                                        borderRadius: '50%',
+                                        border: '2px solid',
+                                        borderColor:
+                                            configs.theme.colors.neutrals[200],
+                                    }}
+                                    src={`https://github.com/${userGHData.login}.png`}
+                                />
+                            ) : (<></>) 
+                        }
                     </Box>
                     <Text
                         variant="body4"
