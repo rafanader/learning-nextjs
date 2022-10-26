@@ -251,9 +251,11 @@ export default function ChatPage() {
                     }}
                 >
                     {
-                        Array.from(messagesList).map((message, index) => {
-                            return <MessageComponent key={index} message={message} />
-                        })
+                        (messagesList.length > 0) && (
+                            Array.from(messagesList).map((message, index) => {
+                                return <MessageComponent key={index} message={message} />
+                            })
+                        )
                     }
 
                 </Box>
@@ -271,6 +273,7 @@ export default function ChatPage() {
                         }}
                         onKeyPress={(event) => MessageTextKeyPressHandler(event)}
                         placeholder="type your message and press SHIFT+ENTER to send"
+                        id="messageTextArea"
                         type="textarea"
                         styleSheet={{
                             width: '100%',
