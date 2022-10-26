@@ -54,10 +54,10 @@ export function GitHubCard(props) {
             position: 'absolute',
             backgroundColor: configs.theme.colors.neutrals[800],
             width: {
-              xs: '230px',
-              sm: '320px',
+              xs: '270px',
+              sm: '350px',
             },
-            height: '110px',
+            height: '130px',
             left: '40px',
             top: '-30px',
             padding: '16px',
@@ -75,8 +75,8 @@ export function GitHubCard(props) {
                 <Image
                     alt={`${props.username}'s github profile image`}
                     styleSheet={{
-                        width: '80px',
-                        height: '80px',
+                        width: '100px',
+                        height: '100px',
                         borderRadius: '50%',
                         display: 'inline-block',
                         marginRight: '8px',

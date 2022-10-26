@@ -6,42 +6,68 @@ import { createClient } from '@supabase/supabase-js'
 import * as configs from '../configurations/general';
 import { GitHubCard } from '../components/gitHubCard.js'
 
+
 const supabaseConfigs = configs.appkeys.SUPABASE;
 
 // Create a single supabase client for interacting with your database
 const supabaseClient = createClient(supabaseConfigs.URL, supabaseConfigs.API_ANON_KEY);
 
-
-export default function ChatPage() {
-       
-    const [messagesList, setMessagesList] = React.useState([]);
-    const [messageText, setMessageText] = React.useState("");
-    const [timeoutId, setTimeoutId] = React.useState(0);
-    const routerControl = useRouter();
-
-    React.useEffect(() => {
-        RefreshMessagesList()
-    }, []);
-
-    function RefreshMessagesList() {
-        console.log('Refreshing messages...')
-        const timerId = setTimeout(() => {
-            LoadMessages();
-        }, 1000);
-
-        setTimeoutId(timerId);
+export async function getStaticProps()
+{
+    const messages = await GetMessages();
+    return  {
+        props: { 'messages': messages}
     }
+}
 
-    async function LoadMessages() {
-        const response = await supabaseClient
+export async function GetMessages() {
+    const response = await supabaseClient
             .from('tblMessages')
             .select('*')
-            .order('datetime', { ascending: false} );
+            .order('datetime', { ascending: false } );
 
-        setMessagesList(response.data);
+    return response.data;
+}
+
+export default function ChatPage(props) 
+{
+    const [messagesList, setMessagesList] = React.useState(props.messages);
+    const [messageText, setMessageText] = React.useState("");
+    const routerControl = useRouter();
+    const currentUser = routerControl.query.username;
+
+    React.useEffect(() => {
+        //LoadMessages();
+        MessagesListener();
+    }, []);
+
+    function MessagesListener() 
+    {
+        const insertResponse = supabaseClient
+            .from('tblMessages')
+            .on('INSERT', (lastInserted) => {
+                //At this moment that the listener is subscribed, the 'messagesList' object is empty
+                //Therefore, in this case, we have to pass to the setMessagesList's hook a function
+                //Thus, the object 'messagesListWithValue' has the actual values of const 'messagesList'
+                setMessagesList((messagesListWithValue) => {
+                        return [lastInserted.new,
+                            ...messagesListWithValue
+                        ];
+                });
+            })
+            .on('DELETE', (lastRemoved) => {
+                LoadMessages();
+            })
+            .subscribe();
     }
 
-    function MessageTextKeyPressHandler(event) {
+    async function LoadMessages() 
+    {      
+        setMessagesList(GetMessages());
+    }
+
+    function MessageTextKeyPressHandler(event) 
+    {
         setMessageText(event.target.value);
         //Shift + Enter to send the message
         if (
@@ -54,9 +80,8 @@ export default function ChatPage() {
         }
     }
 
-    function NewMessage(_messageText) {
-        const currentUser = routerControl.query.username;
-
+    function NewMessage(_messageText) 
+    {
         const newMessage = {
             username: currentUser,
             datetime: new Date(),
@@ -67,27 +92,21 @@ export default function ChatPage() {
         InsertMessage(newMessage);
     }
 
-    async function InsertMessage(message) {
-        if(timeoutId > 0)
-            clearTimeout(timeoutId);
-
+    async function InsertMessage(message) 
+    {
         //Insert message in Supabase
         const response = await supabaseClient.from("tblMessages")
-            .insert(message);
-        
-        LoadMessages();
+            .insert(message);        
     }
 
     async function DeleteMessage(messageId) {
         const response = await supabaseClient.from("tblMessages")
             .delete()
             .match({id : messageId});
-        
-        console.log('delete response for id ' + messageId + ': ', response);
-        LoadMessages();
     }
 
-    function FormatDateTime(utcDateTime) {
+    function FormatDateTime(utcDateTime) 
+    {
         const timeZoneDifference = -3;
 
         const year = utcDateTime.substr(0, 4);
@@ -118,11 +137,25 @@ export default function ChatPage() {
         const message = props.message
         let messageBGColor = configs.theme.colors.neutrals[500]
 
-        if (message.id % 2)
+        if (message.index % 2)
             messageBGColor = configs.theme.colors.neutrals[700]
 
         const formatedDt = FormatDateTime(message.datetime);        
 
+        return (
+
+                message.username == currentUser  ?
+                (
+                    <CurrentUserMessage message={message} formatedDt={formatedDt} />
+                ):
+                (
+                    <NonCurrentUserMessage message={message} messageBGColor={messageBGColor} formatedDt={formatedDt} />
+                )
+        )
+    }
+
+    function CurrentUserMessage(props){
+        const message = props.message;
         return (
             <Text
                 tag="li"
@@ -130,7 +163,98 @@ export default function ChatPage() {
                     borderRadius: '5px',
                     padding: '6px',
                     marginTop: '5px',
-                    backgroundColor: messageBGColor,
+                    backgroundColor: configs.theme.colors.primary[500],
+                }}
+            >
+                <Box
+                    styleSheet={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                    }}
+                >
+                    <Text
+                        tag="strong"
+                        styleSheet={{
+                            fontSize: '16px',
+                            paddingTop: '6px',
+                            paddingBottom: '6px',
+                            textAlign: 'left',
+                            color: configs.theme.colors.primary[900],
+                            width: '100%',
+                            fontWeight: '600'
+                        }}
+                    >
+                        Me
+                    </Text>
+                    <Text
+                        styleSheet={{
+                            fontSize: '11px',
+                            color: configs.theme.colors.neutrals[300],
+                            textAlign: 'right',
+                            width: '130px',
+                            marginTop: '5px',
+                            marginRight: '5px',
+                        }}
+                        tag="span"
+                    >
+                        { props.formatedDt }
+                    </Text>
+                    <Text
+                        styleSheet={{
+                            fontSize: '11px',
+                            color: configs.theme.colors.neutrals[300],
+                            textAlign: 'left',
+                            width: '30px',
+                            marginTop: '5px',
+                            marginLeft: '5px',
+                            hover: {
+                                cursor: 'pointer',
+                                fontWeight: '600',
+                                fontSize: '12px',
+                                color: configs.theme.colors.neutrals[200]
+                            }
+                        }}
+                        tag="a"
+                        onClick={() => {
+                            DeleteMessage(message.id);
+                        }}
+                    >
+                        [ X ]
+                    </Text>
+                </Box>
+                <Box
+                    styleSheet={
+                        {
+                            //marginBottom: '8px',
+                        }
+                    }
+                >
+                    <Text
+                        styleSheet={{
+                            fontSize: '14px',
+                            padding: '8px',
+                            color: configs.theme.colors.neutrals[200],
+                            textAlign: 'right'
+                        }}
+                        tag="span"
+                    >
+                        {message.text}
+                    </Text>
+                </Box>
+            </Text>
+        )
+    }
+
+    function NonCurrentUserMessage(props) {
+        const message = props.message;
+        return (
+            <Text
+                tag="li"
+                styleSheet={{
+                    borderRadius: '5px',
+                    padding: '6px',
+                    marginTop: '5px',
+                    backgroundColor: props.messageBGColor,
                 }}
             >
                 <Box
@@ -163,7 +287,7 @@ export default function ChatPage() {
                         }}
                         tag="span"
                     >
-                        { formatedDt }
+                        { props.formatedDt }
                     </Text>
                     <Text
                         styleSheet={{
@@ -173,19 +297,19 @@ export default function ChatPage() {
                             width: '30px',
                             marginTop: '5px',
                             marginRight: '5px',
-                            hover: {
-                                cursor: 'pointer',
-                                fontWeight: '600',
-                                fontSize: '12px',
-                                color: configs.theme.colors.primary[300]
-                            }
+                            // hover: {
+                            //     cursor: 'pointer',
+                            //     fontWeight: '600',
+                            //     fontSize: '12px',
+                            //     color: configs.theme.colors.primary[300]
+                            // }
                         }}
-                        tag="a"
-                        onClick={() => {
-                            DeleteMessage(message.id);
-                        }}
+                        tag="span"
+                        // onClick={() => {
+                        //     DeleteMessage(message.id);
+                        // }}
                     >
-                        [ X ]
+                        {/* [ X ] */}
                     </Text>
                 </Box>
                 <Box
